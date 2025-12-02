@@ -1,0 +1,920 @@
+<!-- PARTE 1/3 -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SelectSupplier — Sistema de Apoio à Seleção de Fornecedores</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --navy:#001a4d;--blue:#003f91;--bg:#0b1424;--card:#0f2340;--card2:#122a4d;
+  --border:#1e3a5f;--text:#eaf0ff;--muted:#c5cee0;--accent:#ff6a00;
+  --green:#16a34a;--yellow:#facc15;--red:#dc2626;--radius:16px;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif}
+body{margin:0;background:radial-gradient(1000px 600px at -10% -10%,#0d1f3a 0%,#0b1424 60%);color:var(--text)}
+header{
+  background:linear-gradient(135deg,var(--navy),var(--blue));
+  color:#fff;display:flex;gap:12px;align-items:center;padding:18px 20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35)
+}
+header img{height:44px}
+header h1{margin:0;font-size:1.6rem}
+header p{margin:0;color:#e9efff}
+main{max-width:1280px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;box-shadow:0 8px 24px rgba(0,0,0,.28);margin-bottom:16px}
+.btn{background:var(--accent);border:none;border-radius:999px;color:#fff;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn.secondary{background:#2a4a78}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn.danger{background:var(--red)}
+input,select,textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#0e223d;color:var(--text)}
+input[type="number"]{max-width:120px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top;color:var(--text)}
+th{background:#16395e;text-align:left}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tab-btn{background:#0e223d;border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.section{display:none}
+.section.active{display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;color:var(--text)}
+.box{width:14px;height:14px;border-radius:3px;display:inline-block}
+.pill{display:inline-flex;gap:6px;align-items:center;background:#0e223d;border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+.col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+@media (max-width:980px){.col-6,.col-4,.col-3{grid-column:span 12}}
+footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
+
+/* LOGIN (dark) */
+#loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:50}
+#loginCard{background:var(--card2);color:var(--text);border-radius:14px;max-width:380px;width:100%;padding:18px 20px;border:1px solid var(--border);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+#loginCard h2{margin:4px 0 6px}
+#loginCard input{background:#0e223d;color:var(--text);border:1px solid var(--border)}
+#loginCard .btn{width:100%}
+
+/* small helpers */
+.small{font-size:.86rem}
+.muted{color:var(--muted)}
+.divider{height:1px;background:var(--border);margin:10px 0}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid var(--border);background:var(--card2);border-radius:999px}
+</style>
+</head>
+<body>
+<header>
+  <img alt="logo" src="data:image/svg+xml;utf8,
+    <svg xmlns='http://www.w3.org/2000/svg' width='44' height='44'>
+      <rect width='44' height='44' rx='9' fill='%23003f91'/>
+      <path d='M10 30 L22 10 L34 30 Z' fill='%23ff6a00'/>
+    </svg>">
+  <div>
+    <h1>SelectSupplier</h1>
+    <p>Sistema de Apoio à Seleção de Fornecedores · AGEPE II — Escola Politécnica da PUCRS</p>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div id="loginOverlay">
+  <div id="loginCard">
+    <h2>Login</h2>
+    <!-- credenciais não exibidas conforme solicitado -->
+    <label>Usuário</label><input id="loginUser" placeholder="">
+    <label>Senha</label><input id="loginPass" type="password" placeholder="">
+    <button class="btn" style="margin-top:10px" onclick="doLogin()">Entrar</button>
+    <div id="loginErr" style="display:none;color:#ffd0d0;font-weight:600;margin-top:8px">Credenciais incorretas.</div>
+  </div>
+</div>
+
+<main id="app" style="display:none">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="projeto" onclick="switchTab(event,'projeto')">Projeto</button>
+      <button class="tab-btn" data-tab="fornecedores" onclick="switchTab(event,'fornecedores')">Fornecedores</button>
+      <button class="tab-btn" data-tab="cadastro" onclick="switchTab(event,'cadastro')">Manutenção/Cadastro de Fornecedores</button>
+      <button class="tab-btn" data-tab="projetos" onclick="switchTab(event,'projetos')">Projetos</button>
+      <button class="tab-btn" data-tab="orc" onclick="switchTab(event,'orc')">Orçamentistas</button>
+      <button class="tab-btn" data-tab="clientes" onclick="switchTab(event,'clientes')">Clientes</button>
+      <button class="tab-btn" data-tab="indices" onclick="switchTab(event,'indices')">Índices</button>
+      <button class="tab-btn" data-tab="sobre" onclick="switchTab(event,'sobre')">Sobre</button>
+    </div>
+
+    <!-- PROJETO -->
+    <section id="projeto" class="section active">
+      <h2>Configuração do Projeto</h2>
+      <div class="row">
+        <div class="col-6">
+          <label>Nome do projeto</label>
+          <input id="projNome" placeholder="Ex.: Flange usinado + pintura + automação">
+        </div>
+        <div class="col-6">
+          <label>Descrição</label>
+          <input id="projDesc" placeholder="Ex.: Lote piloto · lead time máximo 7 dias">
+        </div>
+
+        <div class="col-6">
+          <label>Orçamentista</label>
+          <select id="projOrc"></select>
+        </div>
+        <div class="col-6">
+          <label>Cliente</label>
+          <select id="projClient"></select>
+        </div>
+
+        <div class="col-12">
+          <h3>Áreas (pelo menos 1)</h3>
+          <div id="areasWrap" class="row"></div>
+          <button class="btn" style="margin-top:8px" onclick="addAreaRow()">+ Adicionar área</button>
+        </div>
+
+        <div class="col-12">
+          <h3>Índices do projeto</h3>
+          <div class="small muted">Defina os índices e pesos (%) — a soma dos pesos deve ser no máximo <b>100</b>. Caso ultrapasse, o sistema exibirá erro.</div>
+          <table>
+            <thead><tr><th>Incluir</th><th>Índice</th><th>Peso (%)</th><th>Peso normalizado</th><th>Descrição</th></tr></thead>
+            <tbody id="idxBody"></tbody>
+          </table>
+        </div>
+
+        <div class="col-12">
+          <label><input type="checkbox" id="projSWOTToggle"> Incluir matriz SWOT/FOFA (opcional)</label>
+        </div>
+
+        <div id="projSWOTArea" class="col-12" style="display:none">
+          <div class="row">
+            <div class="col-6 card" style="background:var(--card2)"><label>Forças (F)</label><textarea id="swotF" placeholder="Forças..."></textarea></div>
+            <div class="col-6 card" style="background:var(--card2)"><label>Fraquezas (F)</label><textarea id="swotR" placeholder="Fraquezas..."></textarea></div>
+            <div class="col-6 card" style="background:var(--card2)"><label>Oportunidades (O)</label><textarea id="swotO" placeholder="Oportunidades..."></textarea></div>
+            <div class="col-6 card" style="background:var(--card2)"><label>Ameaças (A)</label><textarea id="swotA" placeholder="Ameaças..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="legend">
+            <strong>Legenda de cores (score):</strong>
+            <span><span class="box" style="background:var(--green)"></span> 7 a 10</span>
+            <span><span class="box" style="background:var(--yellow)"></span> 4 a 6,99</span>
+            <span><span class="box" style="background:var(--red)"></span> 0 a 3,99</span>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <button class="btn" onclick="calcular()">Calcular scores</button>
+        </div>
+
+        <div class="col-12" id="resTable"></div>
+        <div class="col-12"><canvas id="resChart" height="120"></canvas></div>
+      </div>
+    </section>
+
+    <!-- FORNECEDORES -->
+    <section id="fornecedores" class="section">
+      <h2>Base de Fornecedores</h2>
+      <div class="row">
+        <div class="col-6">
+          <label>Notas por área (opcional)</label>
+          <select id="filtroAreaNotas" onchange="renderFornecedores()">
+            <option value="">(selecionar área para exibir notas da área)</option>
+          </select>
+        </div>
+        <div class="col-6" style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn ghost" onclick="renderFornecedores(true)">Limpar filtro</button>
+        </div>
+        <div class="col-12" id="fornList"></div>
+      </div>
+    </section>
+
+<!-- PARTE 1/3 - SCRIPT (início) -->
+<script>
+/* ===================== ÍNDICES (15) — textos conforme solicitado ===================== */
+const INDICES = [
+  { id:"I1",  nome:"Qualidade",                    scope:"area",   desc:"Conformidade com especificações, taxa de não conformidade, retrabalho." },
+  { id:"I2",  nome:"Tempo de Entrega",             scope:"area",   desc:"Cumprimento de prazos, pontualidade, lead time médio." },
+  { id:"I3",  nome:"Custo",                        scope:"area",   desc:"Nível de preço em relação ao mercado, estabilidade de preço, competitividade." },
+  { id:"I4",  nome:"Flexibilidade de Capacidade",  scope:"area",   desc:"Capacidade de reagir a mudanças de volume/mix, urgências." },
+  { id:"I5",  nome:"Acuracidade de Documentos Fiscais", scope:"global", desc:"Erros em notas fiscais, divergências pedido x faturamento." },
+  { id:"I6",  nome:"Reclamações Técnicas (Histórico)",  scope:"area",   desc:"Histórico de problemas técnicos (nota alta = poucas reclamações)." },
+  { id:"I7",  nome:"Adesão a Normas Ambientais",   scope:"global", desc:"Certificações, descarte adequado, requisitos ESG." },
+  { id:"I8",  nome:"Facilidade de Comunicação",    scope:"global", desc:"Agilidade de resposta, clareza, acesso a responsáveis." },
+  { id:"I9",  nome:"Inovação Tecnológica",         scope:"area",   desc:"Proposição de melhorias, novos processos, sugestões técnicas." },
+  { id:"I10", nome:"Confiabilidade Financeira",    scope:"global", desc:"Estabilidade financeira percebida, risco de ruptura por crédito." },
+  { id:"I11", nome:"Capacidade Técnica",           scope:"area",   desc:"Adequação tecnológica para peças complexas, domínio de processos e normas técnicas." },
+  { id:"I12", nome:"Desempenho Logístico",         scope:"area",   desc:"Organização de expedição, rastreabilidade, cumprimento de janelas de coleta/entrega." },
+  { id:"I13", nome:"Conformidade Legal & Compliance", scope:"global", desc:"Documentação legal, requisitos trabalhistas e fiscais em dia, política anticorrupção." },
+  { id:"I14", nome:"Suporte & Atendimento Pós-venda", scope:"global", desc:"Rapidez na resolução de problemas, suporte técnico após a entrega." },
+  { id:"I15", nome:"Satisfação do Cliente Interno", scope:"area",   desc:"Percepção das áreas usuárias (engenharia, produção, manutenção) sobre o fornecedor." }
+];
+
+/* ===================== ÁREAS ===================== */
+const AREAS = [
+  { id:"A1",  nome:"Usinagem" },
+  { id:"A2",  nome:"Soldagem" },
+  { id:"A3",  nome:"Fundição" },
+  { id:"A4",  nome:"Injeção Plástica" },
+  { id:"A5",  nome:"Impressão 3D" },
+  { id:"A6",  nome:"Software / Automação" },
+  { id:"A7",  nome:"Tratamento Térmico" },
+  { id:"A8",  nome:"Caldeiraria" },
+  { id:"A9",  nome:"Metrologia 3D" },
+  { id:"A10", nome:"Corte a Laser / Dobra" },
+  { id:"A11", nome:"Pintura / Acabamento" },
+  { id:"A12", nome:"Extrusão" },
+  { id:"A13", nome:"Rotomoldagem" },
+  { id:"A14", nome:"Montagem e Acabamento" },
+  { id:"A15", nome:"Fabricação de Moldes" }
+];
+
+/* ===================== BASE DE FORNECEDORES (≥22) — mantida como estava ===================== */
+/* (aqui assume-se que BASE_FORNECEDORES já existe mais acima — se não, será definida na Parte 2) */
+/* ===================== STORAGE KEYS e ESTADOS ===================== */
+const SK_SUP = "ss_pro_suppliers_v3";
+const SK_PROJ = "ss_pro_projects_v3";
+const SK_ORC = "ss_pro_orc_v1";
+const SK_CLI = "ss_pro_cli_v1";
+
+let suppliers = [];
+let projects = [];
+let orcamentos = []; // orçamentistas
+let clientes = [];   // clientes
+let chartRes = null;
+
+/* carregar estado (suppliers e projects já definidos em Parte 2/3 if not in storage) */
+function loadState(){
+  try{ suppliers = JSON.parse(localStorage.getItem(SK_SUP)||"null"); }catch(_){ suppliers=null; }
+  if(!Array.isArray(suppliers)){
+    // será carregado de BASE_FORNECEDORES (definida na Parte 2) ou já presente no código
+    suppliers = structuredClone(typeof BASE_FORNECEDORES !== "undefined" ? BASE_FORNECEDORES : []);
+  }
+
+  try{ projects = JSON.parse(localStorage.getItem(SK_PROJ)||"null"); }catch(_){ projects=null; }
+  if(!Array.isArray(projects)) projects = [];
+
+  try{ orcamentos = JSON.parse(localStorage.getItem(SK_ORC)||"null"); }catch(_){ orcamentos=null; }
+  if(!Array.isArray(orcamentos)) orcamentos = ["Bruno Ullmann","Lucas Sitieni","Pedro Schech","Rafael Hirt"];
+
+  try{ clientes = JSON.parse(localStorage.getItem(SK_CLI)||"null"); }catch(_){ clientes=null; }
+  if(!Array.isArray(clientes)) clientes = ["Cliente Alfa Ltda","Cliente Beta S/A","Cliente Gama Serviços","Cliente Delta LTDA","Empresa Epsilon","Comercial Zeta","Serviços Eta","Logística Theta","Tech Iota","Construtora Kappa","Transporte Lambda","Soluções Mu","Industria Nu","Holding Xi","Distribuidora Omicron"];
+}
+
+function saveSup(){ localStorage.setItem(SK_SUP, JSON.stringify(suppliers)); }
+function saveProj(){ localStorage.setItem(SK_PROJ, JSON.stringify(projects)); }
+function saveOrc(){ localStorage.setItem(SK_ORC, JSON.stringify(orcamentos)); }
+function saveCli(){ localStorage.setItem(SK_CLI, JSON.stringify(clientes)); }
+
+/* ===================== LOGIN ===================== */
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(u==="adm" && p==="123"){
+    document.getElementById('loginOverlay').style.display="none";
+    document.getElementById('app').style.display="block";
+    initUI();
+  }else{
+    document.getElementById('loginErr').style.display="block";
+  }
+}
+
+/* ===================== UI BASICS ===================== */
+function switchTab(ev,id){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  ev.target.classList.add("active");
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if(id==="fornecedores") renderFornecedores();
+  if(id==="cadastro") renderCadastro();
+  if(id==="projetos") renderProjetos();
+  if(id==="orc") renderOrcamentos();
+  if(id==="clientes") renderClientes();
+  if(id==="indices") renderIndicesAdmin();
+}
+
+/* ===================== PROJETO (Áreas & Índices) ===================== */
+function addAreaRow(){
+  const wrap = document.getElementById('areasWrap');
+  const idx = wrap.querySelectorAll('.card').length; // primeira é obrigatória
+  const row = document.createElement('div');
+  row.className="col-12";
+  row.innerHTML = `
+    <div class="card" style="padding:10px">
+      <div class="row">
+        <div class="col-6">
+          <label>Área</label>
+          <select class="area-select">${AREAS.map(a=>`<option value="${a.id}">${a.nome}</option>`).join("")}</select>
+        </div>
+        <div class="col-4">
+          <label>Peso da área (%)</label>
+          <input class="area-weight" type="number" min="0" max="100" value="10">
+        </div>
+        <div class="col-2" style="display:flex;align-items:flex-end;">
+          <button class="btn secondary remove-area" ${idx===0?'disabled':''}>Remover</button>
+        </div>
+      </div>
+    </div>`;
+  wrap.appendChild(row);
+  row.querySelector('.remove-area').onclick = () => {
+    if(idx===0){ return; } // primeira não remove
+    row.remove();
+  };
+}
+<!-- PARTE 2/3 -->
+<script>
+/* ===================== BASE DE FORNECEDORES (≥22) ===================== */
+/* Modelo: {id,nome,areas:[Ax],notas:{ global:{...}, porArea:{ A1:{I1..}, ... } } } */
+const BASE_FORNECEDORES = [
+  { id:"F1", nome:"MecanizaPro", areas:["A1","A2","A3"], notas:{
+      global:{ I5:8,I7:7,I8:8,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:6,I3:7,I4:6,I6:8,I9:7,I11:8,I12:7,I15:8 },
+        A2:{ I1:6,I2:6,I3:7,I4:5,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A3:{ I1:5,I2:4,I3:5,I4:5,I6:6,I9:5,I11:5,I12:5,I15:5 }
+      }
+  }},
+  { id:"F2", nome:"Usinax", areas:["A1","A2","A5","A10"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:6,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:8,I3:6,I4:7,I6:8,I9:6,I11:8,I12:8,I15:7 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A5:{ I1:8,I2:7,I3:8,I4:6,I6:7,I9:8,I11:7,I12:7,I15:7 },
+        A10:{ I1:7,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F3", nome:"SmartAutomate", areas:["A6"], notas:{
+      global:{ I5:9,I7:9,I8:9,I10:9,I13:9,I14:9 },
+      porArea:{ A6:{ I1:9,I2:8,I3:8,I4:7,I6:9,I9:9,I11:8,I12:8,I15:9 } }
+  }},
+  { id:"F4", nome:"MetalPrime", areas:["A8","A7","A10"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A8:{ I1:6,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A7:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A10:{ I1:8,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F5", nome:"GreenPlast", areas:["A4","A11"], notas:{
+      global:{ I5:8,I7:9,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A4:{ I1:8,I2:7,I3:7,I4:7,I6:8,I9:7,I11:7,I12:7,I15:8 },
+        A11:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }},
+  { id:"F6", nome:"LaserShape", areas:["A10","A1"], notas:{
+      global:{ I5:8,I7:8,I8:8,I10:7,I13:7,I14:7 },
+      porArea:{
+        A10:{ I1:8,I2:8,I3:7,I4:7,I6:8,I9:7,I11:8,I12:8,I15:7 },
+        A1:{  I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }},
+  { id:"F7", nome:"MetriScan", areas:["A9"], notas:{
+      global:{ I5:9,I7:9,I8:8,I10:8,I13:9,I14:8 },
+      porArea:{ A9:{ I1:9,I2:8,I3:7,I4:6,I6:8,I9:8,I11:9,I12:8,I15:8 } }
+  }},
+  { id:"F8", nome:"TecnoWeld", areas:["A2"], notas:{
+      global:{ I5:7,I7:7,I8:6,I10:7,I13:7,I14:7 },
+      porArea:{ A2:{ I1:8,I2:6,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 } }
+  }},
+  { id:"F9", nome:"AutoPaint", areas:["A11"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{ A11:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F10", nome:"ProtoPrint3D", areas:["A5"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{ A5:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:8,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F11", nome:"AeroMetals", areas:["A1","A2","A3"], notas:{
+      global:{ I5:8,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A1:{ I1:9,I2:7,I3:6,I4:8,I6:8,I9:8,I11:8,I12:8,I15:9 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 },
+        A3:{ I1:6,I2:5,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F12", nome:"TurboMec", areas:["A1","A2"], notas:{
+      global:{ I5:7,I7:7,I8:6,I10:6,I13:7,I14:6 },
+      porArea:{
+        A1:{ I1:8,I2:6,I3:6,I4:8,I6:7,I9:7,I11:7,I12:7,I15:8 },
+        A2:{ I1:7,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F13", nome:"ForgeMix", areas:["A1","A2","A7"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:7,I3:7,I4:7,I6:7,I9:6,I11:7,I12:7,I15:8 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 },
+        A7:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F14", nome:"Proweld Machining", areas:["A1","A2"], notas:{
+      global:{ I5:8,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:8,I3:7,I4:7,I6:8,I9:7,I11:8,I12:8,I15:8 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 }
+      }
+  }},
+  { id:"F15", nome:"SteelCraft", areas:["A1","A2","A8"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:7,I3:6,I4:7,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A2:{ I1:8,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:7 },
+        A8:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F16", nome:"Weld&Mill", areas:["A1","A2"], notas:{
+      global:{ I5:8,I7:8,I8:8,I10:7,I13:8,I14:8 },
+      porArea:{
+        A1:{ I1:9,I2:8,I3:7,I4:8,I6:8,I9:7,I11:8,I12:8,I15:9 },
+        A2:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 }
+      }
+  }},
+  { id:"F17", nome:"MaxForge", areas:["A3","A7"], notas:{
+      global:{ I5:7,I7:6,I8:6,I10:6,I13:7,I14:6 },
+      porArea:{
+        A3:{ I1:7,I2:5,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 },
+        A7:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F18", nome:"PlastiForm", areas:["A4"], notas:{
+      global:{ I5:8,I7:8,I8:7,I10:7,I13:8,I14:7 },
+      porArea:{ A4:{ I1:7,I2:7,I3:7,I4:7,I6:7,I9:7,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F19", nome:"Rotomax", areas:["A13"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{ A13:{ I1:7,I2:6,I3:7,I4:6,I6:7,I9:6,I11:6,I12:6,I15:6 } }
+  }},
+  { id:"F20", nome:"PaintFlex", areas:["A11","A10"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A11:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A10:{ I1:7,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F21", nome:"MeasureTech", areas:["A9","A6"], notas:{
+      global:{ I5:9,I7:9,I8:8,I10:8,I13:9,I14:8 },
+      porArea:{
+        A9:{ I1:9,I2:8,I3:7,I4:6,I6:8,I9:8,I11:9,I12:8,I15:8 },
+        A6:{ I1:8,I2:8,I3:8,I4:7,I6:8,I9:8,I11:8,I12:8,I15:9 }
+      }
+  }},
+  { id:"F22", nome:"InduParts", areas:["A1","A2","A14"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:7,I3:7,I4:7,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A2:{ I1:7,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A14:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }}
+];
+
+/* ===================== FUNÇÕES AUXILIARES E CÁLCULOS ===================== */
+function renderIndices(){
+  const tb = document.getElementById('idxBody');
+  tb.innerHTML = "";
+  INDICES.forEach(ind=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="idx-inc" data-id="${ind.id}" checked></td>
+      <td>${ind.id} — ${ind.nome}</td>
+      <td><input type="number" class="idx-weight" data-id="${ind.id}" min="0" max="100" value="10"></td>
+      <td class="idx-norm" data-id="${ind.id}">—</td>
+      <td class="small muted">${ind.desc||""}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function clamp(n,min,max){ n=Number(n); if(isNaN(n)) return 0; return Math.min(Math.max(n,min),max); }
+function normalize(list,key){
+  const s=list.reduce((acc,it)=>acc+(+it[key]||0),0);
+  return list.map(it=>({...it,w:s>0?(+it[key]||0)/s:0}));
+}
+function colorByScore(v){ if(v>=7) return getVar('--green'); if(v>=4) return getVar('--yellow'); return getVar('--red'); }
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* cálculo principal */
+function calcular(){
+  const name = (document.getElementById('projNome').value||"").trim();
+  const desc = (document.getElementById('projDesc').value||"").trim();
+
+  // áreas selecionadas (obrigatório >=1) + pesos
+  const areaCards = [...document.querySelectorAll('#areasWrap .card')];
+  const areaRows = areaCards.map(card=>{
+    const id = card.querySelector('.area-select').value;
+    const peso = clamp(card.querySelector('.area-weight').value,0,100);
+    card.querySelector('.area-weight').value = peso;
+    return { id, peso };
+  });
+  if(!areaRows.length){ alert("Adicione ao menos 1 área."); return; }
+  const areasW = normalize(areaRows,'peso');
+
+  // índices marcados + pesos
+  const idxRows = INDICES.map(ind=>{
+    const incEl = document.querySelector(`.idx-inc[data-id='${ind.id}']`);
+    const inc = incEl ? incEl.checked : false;
+    const peso = clamp(document.querySelector(`.idx-weight[data-id='${ind.id}']`).value,0,100);
+    document.querySelector(`.idx-weight[data-id='${ind.id}']`).value = peso;
+    return { id:ind.id, nome:ind.nome, scope:ind.scope, inc, peso, desc:ind.desc };
+  }).filter(r=>r.inc);
+  if(!idxRows.length){ alert("Selecione ao menos 1 índice."); return; }
+  const sumIdx = idxRows.reduce((a,b)=>a+b.peso,0);
+  if(sumIdx > 100){ alert("Soma dos pesos dos índices maior que 100. Ajuste os pesos."); return; }
+  const idxW = normalize(idxRows,'peso');
+
+  // atualizar col de peso normalizado
+  INDICES.forEach(ind=>{
+    const cell = document.querySelector(`.idx-norm[data-id='${ind.id}']`);
+    const f = idxW.find(x=>x.id===ind.id);
+    cell.textContent = f ? f.w.toFixed(3).replace('.',',') : "0,000";
+  });
+
+  // FORNECEDORES CONSIDERADOS: devem possuir TODAS as áreas do projeto
+  const areasIds = areasW.map(a=>a.id);
+  const considerados = suppliers.filter(f => areasIds.every(a => f.areas.includes(a)));
+
+  // calcular score por fornecedor
+  const resultados = considerados.map(f=>{
+    const areaScores = areasW.map(a=>{
+      let s=0;
+      idxW.forEach(ix=>{
+        let nota=0;
+        if(ix.scope==="area"){
+          nota = f.notas?.porArea?.[a.id]?.[ix.id] ?? 0;
+        }else{
+          nota = f.notas?.global?.[ix.id] ?? 0;
+        }
+        s += nota * ix.w;
+      });
+      return { area:a.id, w:a.w, score:s };
+    });
+    const final = areaScores.reduce((acc,it)=>acc + it.score*it.w, 0);
+    return { f, final, areaScores };
+  }).sort((a,b)=>b.final - a.final);
+
+  renderResultados(resultados, areasW);
+  renderGrafico(resultados);
+
+  projects.unshift({
+    nome: name||"(sem nome)",
+    desc,
+    data: new Date().toISOString(),
+    areas: areasIds.map(id => AREAS.find(x=>x.id===id)?.nome || id),
+    top3: resultados.slice(0,3).map(r=>({ id:r.f.id, nome:r.f.nome, score:+r.final.toFixed(2) }))
+  });
+  saveProj();
+}
+
+/* ===================== RENDER RESULTADOS & GRÁFICOS ===================== */
+function renderResultados(lista, areasW){
+  const box = document.getElementById('resTable');
+  if(!lista.length){ box.innerHTML = "<p class='muted'>Nenhum fornecedor atende a todas as áreas selecionadas.</p>"; return; }
+
+  let head = `<tr><th>Rank</th><th>ID</th><th>Fornecedor</th><th>Score</th>`;
+  areasW.forEach(a=>{
+    const nome = AREAS.find(x=>x.id===a.id)?.nome || a.id;
+    head += `<th>${nome} (w=${a.w.toFixed(2)})</th>`;
+  });
+  head += `</tr>`;
+
+  let body = "";
+  lista.forEach((r,i)=>{
+    body += `<tr>
+      <td>#${i+1}</td>
+      <td>${r.f.id}</td>
+      <td>${r.f.nome}</td>
+      <td><span class="pill" style="border-color:${colorByScore(r.final)}">${r.final.toFixed(2)}</span></td>
+      ${r.areaScores.map(sa=>`<td><span class="pill" style="border-color:${colorByScore(sa.score)}">${sa.score.toFixed(2)}</span></td>`).join("")}
+    </tr>`;
+  });
+
+  box.innerHTML = `
+    <h3>Resultados</h3>
+    <table>
+      <thead>${head}</thead>
+      <tbody>${body}</tbody>
+    </table>
+  `;
+}
+
+function renderGrafico(lista){
+  const ctx = document.getElementById('resChart').getContext('2d');
+  if(chartRes){ chartRes.destroy(); }
+  const labels = lista.map(r=>r.f.nome);
+  const data = lista.map(r=>+r.final.toFixed(2));
+  const colors = data.map(v=>colorByScore(v));
+  chartRes = new Chart(ctx,{
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Score do projeto', data, backgroundColor:colors, borderColor:colors }]},
+    options:{ responsive:true, scales:{ y:{ beginAtZero:true, max:10 } } }
+  });
+}
+
+/* ===================== LISTA DE FORNECEDORES (visual + filtro de notas por área) ===================== */
+function renderFornecedores(clear){
+  const sel = document.getElementById('filtroAreaNotas');
+  if(sel.options.length<=1){
+    // preencher opções na 1ª vez
+    AREAS.forEach(a=>{
+      const o=document.createElement('option');o.value=a.id;o.textContent=a.nome;sel.appendChild(o);
+    });
+  }
+  if(clear){ sel.value=""; }
+
+  const areaNotas = sel.value || "";
+
+  const div = document.getElementById('fornList');
+  let head = `<tr><th>ID</th><th>Fornecedor</th><th>Áreas</th><th>Notas Globais</th>`;
+  if(areaNotas){
+    head += `<th>Notas — ${AREAS.find(a=>a.id===areaNotas)?.nome||areaNotas}</th>`;
+  }
+  head += `<th>Ações</th></tr>`;
+
+  let body = "";
+  suppliers.forEach(f=>{
+    const areas = f.areas.map(a=>AREAS.find(x=>x.id===a)?.nome||a).join(", ");
+    const globais = Object.entries(f.notas?.global||{}).map(([k,v])=>{
+      const n = INDICES.find(i=>i.id===k)?.nome||k; return `${n}: ${v}`;
+    }).join("; ");
+
+    let colArea = "";
+    if(areaNotas){
+      const notasA = f.notas?.porArea?.[areaNotas]||{};
+      colArea = Object.entries(notasA).map(([k,v])=>{
+        const n = INDICES.find(i=>i.id===k)?.nome||k; return `${n}: ${v}`;
+      }).join("; ");
+    }
+
+    body += `<tr>
+      <td>${f.id}</td>
+      <td>${f.nome}</td>
+      <td>${areas}</td>
+      <td>${globais||"<span class='muted'>—</span>"}</td>
+      ${areaNotas?`<td>${colArea||"<span class='muted'>—</span>"}</td>`:""}
+      <td>
+        <button class="btn secondary" onclick="editarFornecedor('${f.id}')">Editar</button>
+        <button class="btn danger" onclick="excluirFornecedor('${f.id}')">Excluir</button>
+      </td>
+    </tr>`;
+  });
+
+  div.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+
+/* ===================== CADASTRO / EDIÇÃO FORNECEDORES ===================== */
+let editingId = null;
+
+function renderCadastro(){
+  const wrapAreas = document.getElementById('c_areas');
+  wrapAreas.innerHTML = AREAS.map(a=>`
+    <label class="col-3 small"><input type="checkbox" value="${a.id}" onchange="renderNotasPorArea()"> ${a.nome}</label>
+  `).join("");
+
+  const wrapGlob = document.getElementById('c_notasGlobais');
+  wrapGlob.innerHTML = INDICES.filter(i=>i.scope==="global").map(i=>`
+    <label class="small">${i.id} — ${i.nome}
+      <input type="number" min="0" max="10" step="0.1" data-id="${i.id}">
+    </label>
+  `).join("");
+
+  renderNotasPorArea();
+}
+
+function renderNotasPorArea(){
+  const wrap = document.getElementById('c_notasPorArea');
+  const marcadas = [...document.querySelectorAll('#c_areas input:checked')].map(i=>i.value);
+  const idxArea = INDICES.filter(i=>i.scope==="area");
+  if(!marcadas.length){ wrap.innerHTML = `<p class="muted">Marque ao menos uma área para preencher as notas específicas por área.</p>`; return; }
+  wrap.innerHTML = marcadas.map(a=>{
+    const nome = AREAS.find(x=>x.id===a)?.nome||a;
+    const ins = idxArea.map(i=>`
+      <label class="small">${i.id} — ${i.nome}
+        <input type="number" min="0" max="10" step="0.1" data-id="${i.id}">
+      </label>
+    `).join("");
+    return `<div class="card" style="background:var(--card2)">
+      <div class="badge">${nome}</div>
+      <div>${ins}</div>
+    </div>`;
+  }).join("");
+}
+
+function limparCadastro(){
+  editingId = null;
+  document.getElementById('c_id').value = "";
+  document.getElementById('c_nome').value = "";
+  renderCadastro();
+}
+
+function salvarFornecedor(){
+  const id = (document.getElementById('c_id').value||"").trim();
+  const nome = (document.getElementById('c_nome').value||"").trim();
+  if(!id || !nome){ alert("Preencha ID e Nome."); return; }
+
+  const areas = [...document.querySelectorAll('#c_areas input:checked')].map(i=>i.value);
+  if(!areas.length){ alert("Selecione ao menos uma área atendida."); return; }
+
+  const globais = {};
+  document.querySelectorAll('#c_notasGlobais input').forEach(inp=>{
+    const v = inp.value.trim(); if(v!=="") globais[inp.dataset.id] = clamp(v,0,10);
+  });
+
+  const porArea = {};
+  document.querySelectorAll('#c_notasPorArea .card').forEach(card=>{
+    const areaNome = card.querySelector('.badge').textContent;
+    const areaId = AREAS.find(a=>a.nome===areaNome)?.id || "";
+    if(!areaId) return;
+    porArea[areaId] = {};
+    card.querySelectorAll('input').forEach(i=>{
+      const v = i.value.trim(); if(v!=="") porArea[areaId][i.dataset.id] = clamp(v,0,10);
+    });
+  });
+
+  const obj = { id, nome, areas, notas:{ global:globais, porArea } };
+
+  if(editingId){
+    const ix = suppliers.findIndex(f=>f.id===editingId);
+    if(ix>=0) suppliers[ix] = obj;
+    editingId = null;
+  }else{
+    if(suppliers.some(f=>f.id===id)){ alert("Já existe um fornecedor com esse ID."); return; }
+    suppliers.push(obj);
+  }
+  saveSup();
+  alert("Fornecedor salvo.");
+  renderFornecedores();
+}
+
+function editarFornecedor(id){
+  const f = suppliers.find(x=>x.id===id);
+  if(!f) return;
+  editingId = id;
+  // switch to cadastro tab
+  document.querySelector(".tab-btn[data-tab='cadastro']").click();
+
+  document.getElementById('c_id').value = f.id;
+  document.getElementById('c_nome').value = f.nome;
+
+  renderCadastro();
+  f.areas.forEach(a=>{
+    const el = [...document.querySelectorAll('#c_areas input')].find(i=>i.value===a);
+    if(el) el.checked = true;
+  });
+  renderNotasPorArea();
+
+  Object.entries(f.notas?.global||{}).forEach(([k,v])=>{
+    const el = document.querySelector(`#c_notasGlobais input[data-id='${k}']`);
+    if(el) el.value = v;
+  });
+  Object.entries(f.notas?.porArea||{}).forEach(([aid,map])=>{
+    Object.entries(map).forEach(([k,v])=>{
+      const areaCard = [...document.querySelectorAll('#c_notasPorArea .card')].find(c=>{
+        const nm = c.querySelector('.badge').textContent;
+        const id = AREAS.find(a=>a.nome===nm)?.id; return id===aid;
+      });
+      if(areaCard){
+        const el = areaCard.querySelector(`input[data-id='${k}']`);
+        if(el) el.value = v;
+      }
+    });
+  });
+}
+
+function excluirFornecedor(id){
+  if(!confirm("Confirma excluir este fornecedor?")) return;
+  suppliers = suppliers.filter(f=>f.id!==id);
+  saveSup();
+  renderFornecedores();
+}
+
+/* ===================== PROJETOS (histórico com gráfico top3) ===================== */
+function renderProjetos(){
+  const div = document.getElementById('projHist');
+  if(!projects.length){ div.innerHTML = `<p class="muted">Nenhum projeto salvo.</p>`; return; }
+
+  let html = "";
+  projects.forEach((p,ix)=>{
+    const gid = `projChart_${ix}`;
+    html += `<div class="card">
+      <div class="row">
+        <div class="col-12"><strong>${p.nome}</strong></div>
+        ${p.desc?`<div class="col-12 small muted">${p.desc}</div>`:""}
+        <div class="col-12" style="margin:6px 0"><span class="badge">Áreas:</span> ${p.areas.map(a=>`<span class="pill">${a}</span>`).join(" ")}</div>
+        <div class="col-12"><canvas id="${gid}" height="90"></canvas></div>
+      </div>
+    </div>`;
+  });
+  div.innerHTML = html;
+
+  projects.forEach((p,ix)=>{
+    const ctx = document.getElementById(`projChart_${ix}`).getContext('2d');
+    const labels = p.top3.map(t=>t.nome);
+    const data = p.top3.map(t=>t.score);
+    const colors = data.map(v=>colorByScore(v));
+    new Chart(ctx,{
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Top 3 (score)', data, backgroundColor:colors, borderColor:colors }] },
+      options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:10 } } }
+    });
+  });
+}
+</script>
+<script>
+/* ===================== LOGIN ===================== */
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(u==="adm" && p==="123"){
+    document.getElementById('loginOverlay').style.display="none";
+    document.getElementById('app').style.display="block";
+    return;
+  }
+  document.getElementById('loginErr').style.display="block";
+}
+
+/* ===================== SALVAR / CARREGAR ===================== */
+function saveSup(){ localStorage.setItem("suppliers_v2", JSON.stringify(suppliers)); }
+function saveProj(){ localStorage.setItem("projects_v2", JSON.stringify(projects)); }
+
+/* ===================== INIT ===================== */
+function init(){
+  suppliers = JSON.parse(localStorage.getItem("suppliers_v2")||"null") || BASE_FORNECEDORES;
+  projects  = JSON.parse(localStorage.getItem("projects_v2")||"[]");
+
+  renderIndices();
+  renderAreasProjeto();
+  renderFornecedores();
+  renderCadastro();
+  renderProjetos();
+}
+
+/* CRIA PRIMEIRA LINHA DE ÁREA */
+function renderAreasProjeto(){
+  const wrap = document.getElementById('areasWrap');
+  wrap.innerHTML = "";
+  addAreaRow(); // uma linha obrigatória
+}
+
+/* ===================== SOBRE ===================== */
+/* Apenas mantém o texto existente — não modificado */
+</script>
+
+<!-- SEÇÃO: CADASTRO DE FORNECEDORES -->
+<section id="cadastro" class="section">
+  <h2>Manutenção/Cadastro de Fornecedores</h2>
+  <div class="row">
+    <div class="col-6">
+      <label>ID</label>
+      <input id="c_id" placeholder="Ex.: F23">
+    </div>
+    <div class="col-6">
+      <label>Nome do fornecedor</label>
+      <input id="c_nome" placeholder="Ex.: Metalúrgica Alfa">
+    </div>
+
+    <div class="col-12">
+      <h3>Áreas atendidas</h3>
+      <div id="c_areas" class="row"></div>
+    </div>
+
+    <div class="col-12">
+      <h3>Notas Globais</h3>
+      <div id="c_notasGlobais" class="row"></div>
+    </div>
+
+    <div class="col-12">
+      <h3>Notas por Área</h3>
+      <div id="c_notasPorArea"></div>
+    </div>
+
+    <div class="col-12" style="margin-top:10px">
+      <button class="btn" onclick="salvarFornecedor()">Salvar</button>
+      <button class="btn ghost" onclick="limparCadastro()">Limpar</button>
+    </div>
+  </div>
+</section>
+
+<!-- PROJETOS (HISTÓRICO) -->
+<section id="projetos" class="section">
+  <h2>Projetos</h2>
+  <div id="projHist"></div>
+</section>
+
+<!-- SOBRE -->
+<section id="sobre" class="section">
+  <h2>Sobre a ferramenta</h2>
+  <p class="small">
+    Sistema desenvolvido para apoio à seleção estruturada de fornecedores,
+    com base em áreas técnicas, índices ponderados e ranqueamento multicritério.
+  </p>
+</section>
+
+</div> <!-- fecha card principal -->
+</main>
+
+<footer>
+  SelectSupplier · PUCRS — Projeto AGEPE II  
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
