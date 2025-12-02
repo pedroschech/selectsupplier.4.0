@@ -37,8 +37,13 @@ main{max-width:1280px;margin:0 auto;padding:18px}
 .btn.secondary{background:#2a4a78}
 .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn.danger{background:var(--red)}
+
+/* INPUTS GERAIS */
 input,select,textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#0e223d;color:var(--text)}
 input[type="number"]{max-width:120px}
+/* CORREÇÃO VISUAL: Checkboxes não devem ter width 100% */
+input[type="checkbox"] { width: auto; margin-right: 8px; cursor: pointer; transform: scale(1.2); }
+
 textarea{resize:vertical; min-height:80px;}
 table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
 th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:top;color:var(--text)}
@@ -55,6 +60,14 @@ th{background:#16395e;text-align:left}
 .col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-2{grid-column:span 2}
 @media (max-width:980px){.col-6,.col-4,.col-3,.col-2{grid-column:span 12}}
 footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
+
+/* Correção para o visual das Checkboxes na Manutenção */
+.checkbox-label {
+    display: flex; 
+    align-items: center; 
+    cursor: pointer; 
+    padding: 5px 0;
+}
 
 /* SWOT Styles */
 .swot-container{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;}
@@ -99,7 +112,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
     </svg>">
   <div>
     <h1>SelectSupplier</h1>
-    <p>Sistema de Apoio à Seleção de Fornecedores · Indusmart</p>
+    <p>Sistema de Apoio à Seleção de Fornecedores</p>
   </div>
 </header>
 
@@ -135,10 +148,15 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
           <label>Nome do projeto</label>
           <input id="projNome" placeholder="Ex.: Flange usinado + pintura">
         </div>
-        <div class="col-6">
+        <div class="col-3">
+            <label>Data de Início</label>
+            <input type="date" id="projDataInicio">
+        </div>
+        <div class="col-3">
             <label>Orçamentista</label>
             <select id="projOrc"></select>
         </div>
+        
         <div class="col-6">
             <label>Cliente</label>
             <select id="projCli"></select>
@@ -150,9 +168,12 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 
         <div class="col-12">
             <div class="divider"></div>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="checkbox" id="checkSwot" onchange="toggleSwot()"> <strong>Adicionar Matriz SWOT/FOFA (Opcional)</strong>
-            </label>
+            <div style="display:flex; align-items:center; gap:0px;">
+                <label class="checkbox-label" style="font-weight:bold;">
+                    <input type="checkbox" id="checkSwot" onchange="toggleSwot()"> Adicionar Matriz SWOT/FOFA (Opcional)
+                </label>
+            </div>
+            
             <div id="swotArea" style="display:none;">
                 <div class="swot-container">
                     <div class="swot-card bg-yellow">
@@ -258,10 +279,13 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 
         <div class="col-12"><div class="divider"></div></div>
 
-        <div class="col-6">
+        <div class="col-12">
           <h3>Áreas atendidas</h3>
           <div id="c_areas" class="row"></div>
         </div>
+        
+        <div class="col-12"><div class="divider"></div></div>
+
         <div class="col-6">
           <h3>Notas globais (0–10)</h3>
           <div id="c_notasGlobais"></div>
@@ -301,7 +325,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 
     <section id="dashboard" class="section">
         <h2>Visão Geral</h2>
-        <div class="filter-bar">
+         <div class="filter-bar">
             <div class="filter-group">
                 <label>Status</label>
                 <select id="dbF_status" onchange="renderDashboard()">
@@ -381,17 +405,14 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
         <h3>4. Critério de Corte</h3>
         <p>Apenas fornecedores que possuem capacidade produtiva cadastrada em <strong>TODAS</strong> as áreas solicitadas pelo projeto são incluídos no ranking.</p>
       </div>
-      
-      <p class="small muted">Desenvolvido como protótipo acadêmico para AGEPE II - PUCRS.</p>
     </section>
   </div>
 </main>
 
-<footer>SelectSupplier — Protótipo funcional v2</footer>
+<footer>SelectSupplier — Protótipo funcional v2.1</footer>
 
 <script>
 /* ===================== CONFIG INICIAL ===================== */
-/* Descrições encorpadas e detalhadas */
 const INITIAL_INDICES = [
   { id:"I1",  nome:"Qualidade", scope:"area", desc:"Nível de conformidade técnica, acabamento superficial e aderência às tolerâncias de desenho." },
   { id:"I2",  nome:"Tempo de Entrega", scope:"area", desc:"Histórico de cumprimento de prazos (OTD), lead time e previsibilidade logística." },
@@ -427,7 +448,7 @@ const AREAS = [
   { id:"A13", nome:"Rotomoldagem" }, { id:"A14", nome:"Montagem e Acabamento" }, { id:"A15", nome:"Fabricação de Moldes" }
 ];
 
-/* Base de fornecedores COMPLETA conforme pedido */
+/* Base de fornecedores COMPLETA */
 const BASE_FORNECEDORES = [
   { id:"F1", nome:"MecanizaPro", areas:["A1","A2","A3"], notas:{
       global:{ I5:8,I7:7,I8:8,I10:7,I13:7,I14:7 },
@@ -569,6 +590,15 @@ const BASE_FORNECEDORES = [
         A2:{ I1:7,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
         A14:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
       }
+  }},
+  /* 3. NOVOS FORNECEDORES ADICIONADOS PARA COBRIR EXTRUSÃO (A12) E MOLDES (A15) */
+  { id:"F23", nome:"ExtrusaPack", areas:["A12"], notas:{
+      global:{ I5:8,I7:8,I8:7,I10:7,I13:8,I14:7 },
+      porArea:{ A12:{ I1:7,I2:8,I3:8,I4:6,I6:7,I9:6,I11:7,I12:8,I15:7 } }
+  }},
+  { id:"F24", nome:"Moldes Precision", areas:["A15"], notas:{
+      global:{ I5:9,I7:7,I8:8,I10:8,I13:8,I14:8 },
+      porArea:{ A15:{ I1:9,I2:7,I3:6,I4:8,I6:8,I9:8,I11:9,I12:7,I15:8 } }
   }}
 ];
 
@@ -691,7 +721,8 @@ function editCli(i){
 function renderInd(){
     document.getElementById('listInd').innerHTML = `<table>
         <thead><tr><th>ID</th><th>Nome</th><th>Escopo</th><th>Ações</th></tr></thead>
-        <tbody>${indicesList.map((ind,i)=>`<tr><td>${ind.id}</td><td>${ind.nome}</td><td>${ind.scope}</td><td>
+        <tbody>${indicesList.map((ind,i)=>`<tr><td>${ind.id}</td><td>${ind.nome}</td>
+            <td>${ind.scope === 'area' ? 'Área' : 'Global'}</td><td>
             <button class="btn danger small" onclick="delInd(${i})">Excluir</button>
         </td></tr>`).join('')}</tbody>
     </table>`;
@@ -791,6 +822,8 @@ function calcular(){
   const name = (document.getElementById('projNome').value||"").trim();
   const orc = document.getElementById('projOrc').value;
   const cli = document.getElementById('projCli').value;
+  const dataInicio = document.getElementById('projDataInicio').value; // DATA INICIO
+
   if(!name){ alert("Nome do projeto é obrigatório."); return; }
   if(!orc || !cli){ alert("Selecione Orçamentista e Cliente."); return; }
 
@@ -869,6 +902,7 @@ function calcular(){
     cliente: cli,
     status: "A iniciar",
     data: new Date().toISOString(),
+    dataInicio: dataInicio || new Date().toISOString().split('T')[0], // DATA DE INÍCIO
     areas: areasIds.map(id => AREAS.find(x=>x.id===id)?.nome || id),
     indicesUsados: idxW,
     swot: swot,
@@ -987,8 +1021,9 @@ function renderProjetos(){
       <div class="row">
         <div class="col-8">
             <h3>${p.nome}</h3>
-            <p class="small muted">${p.desc||""} • ${new Date(p.data).toLocaleDateString()}</p>
-            <div class="small">Orç.: <strong>${p.orcamentista}</strong> | Cli.: <strong>${p.cliente}</strong></div>
+            <p class="small muted">${p.desc||""} • Cadastrado em: ${new Date(p.data).toLocaleDateString()}</p>
+            <div class="small">Início Previsto: <strong>${p.dataInicio ? new Date(p.dataInicio).toLocaleDateString() : 'N/D'}</strong></div>
+            <div class="small" style="margin-top:5px">Orç.: <strong>${p.orcamentista}</strong> | Cli.: <strong>${p.cliente}</strong></div>
         </div>
         <div class="col-4" style="text-align:right">
             <label class="small">Status:</label>
@@ -1051,7 +1086,11 @@ async function generatePDF(ix){
     doc.setFont("helvetica", "bold"); doc.text(`Projeto: ${p.nome}`, 10, y); y+=6;
     doc.setFont("helvetica", "normal"); 
     doc.text(`Descrição: ${p.desc||"-"}`, 10, y); y+=6;
-    doc.text(`Data: ${new Date(p.data).toLocaleDateString()}`, 10, y); y+=6;
+    doc.text(`Cadastrado em: ${new Date(p.data).toLocaleDateString()}`, 10, y); 
+    if(p.dataInicio) {
+        doc.text(`Início Previsto: ${new Date(p.dataInicio).toLocaleDateString()}`, 100, y); 
+    }
+    y+=6;
     doc.text(`Orçamentista: ${p.orcamentista}`, 10, y); 
     doc.text(`Cliente: ${p.cliente}`, 100, y); y+=6;
     doc.text(`Status: ${p.status}`, 10, y); y+=10;
@@ -1163,7 +1202,15 @@ function renderFornecedores(clear){
 // Manutenção Fornecedores
 let editingId = null;
 function renderCadastro(){
-  document.getElementById('c_areas').innerHTML = AREAS.map(a=>`<label class="col-3 small"><input type="checkbox" value="${a.id}" onchange="renderNotasPorArea()"> ${a.nome}</label>`).join("");
+  // 5. AJUSTE DE LAYOUT PARA CHECKBOXES
+  document.getElementById('c_areas').innerHTML = AREAS.map(a=>`
+    <div class="col-3">
+        <label class="checkbox-label small">
+            <input type="checkbox" value="${a.id}" onchange="renderNotasPorArea()"> ${a.nome}
+        </label>
+    </div>
+  `).join("");
+
   document.getElementById('c_notasGlobais').innerHTML = indicesList.filter(i=>i.scope==="global").map(i=>`<label class="small">${i.id} — ${i.nome} <input type="number" min="0" max="10" step="0.1" data-id="${i.id}"></label>`).join("");
   renderNotasPorArea();
 }
