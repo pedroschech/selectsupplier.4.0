@@ -41,7 +41,7 @@ main{max-width:1280px;margin:0 auto;padding:18px}
 /* INPUTS GERAIS */
 input,select,textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#0e223d;color:var(--text)}
 input[type="number"]{max-width:120px}
-/* CORREÇÃO VISUAL: Checkboxes não devem ter width 100% */
+/* CORREÇÃO VISUAL: Checkboxes */
 input[type="checkbox"] { width: auto; margin-right: 8px; cursor: pointer; transform: scale(1.2); }
 
 textarea{resize:vertical; min-height:80px;}
@@ -61,7 +61,7 @@ th{background:#16395e;text-align:left}
 @media (max-width:980px){.col-6,.col-4,.col-3,.col-2{grid-column:span 12}}
 footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 
-/* Correção para o visual das Checkboxes na Manutenção */
+/* Checkboxes visual fix */
 .checkbox-label {
     display: flex; 
     align-items: center; 
@@ -78,6 +78,91 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 .bg-red{background:var(--pastel-red);}
 .bg-green{background:var(--pastel-green);}
 .bg-blue{background:var(--pastel-blue);}
+
+/* ISHIKAWA (FISHBONE) STYLES */
+.fishbone-wrapper {
+    margin-top: 15px;
+    padding: 10px;
+    background: #0d1f3a;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+}
+.fish-container {
+    display: flex;
+    align-items: center;
+    min-width: 800px; /* Garante que não quebre em telas pequenas */
+    position: relative;
+    padding: 20px 0;
+}
+.fish-ribs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.fish-spine {
+    height: 4px;
+    background: var(--muted);
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+.fish-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    position: relative;
+    z-index: 1;
+}
+.fish-bone-box {
+    width: 30%;
+    position: relative;
+}
+/* Linhas diagonais (costelas) */
+.fish-row.top .fish-bone-box::after {
+    content: ''; position: absolute; bottom: -20px; left: 50%; width: 2px; height: 30px;
+    background: var(--muted); transform: rotate(-30deg); transform-origin: bottom center; z-index: -1;
+}
+.fish-row.bottom .fish-bone-box::before {
+    content: ''; position: absolute; top: -20px; left: 50%; width: 2px; height: 30px;
+    background: var(--muted); transform: rotate(30deg); transform-origin: top center; z-index: -1;
+}
+
+.fish-input-card {
+    background: var(--card2);
+    border: 1px solid var(--blue);
+    padding: 8px;
+    border-radius: 8px;
+}
+.fish-label {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: block;
+}
+.fish-head {
+    width: 180px;
+    margin-left: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.fish-head-shape {
+    background: var(--accent);
+    color: #fff;
+    padding: 15px;
+    border-radius: 0 50px 50px 0; /* Formato de ponta */
+    width: 100%;
+    text-align: center;
+}
+.fish-head-shape label { font-size: 0.8rem; opacity: 0.9; display:block; margin-bottom:4px; }
+.fish-head-shape input { background: rgba(255,255,255,0.2); color:#fff; border:none; text-align:center; }
+.fish-head-shape input::placeholder { color: rgba(255,255,255,0.6); }
 
 /* LOGIN (dark) */
 #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:50}
@@ -168,32 +253,84 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 
         <div class="col-12">
             <div class="divider"></div>
-            <div style="display:flex; align-items:center; gap:0px;">
+            
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
                 <label class="checkbox-label" style="font-weight:bold;">
                     <input type="checkbox" id="checkSwot" onchange="toggleSwot()"> Adicionar Matriz SWOT/FOFA (Opcional)
                 </label>
+                
+                <label class="checkbox-label" style="font-weight:bold;">
+                    <input type="checkbox" id="checkIshikawa" onchange="toggleIshikawa()"> Adicionar Diagrama de Ishikawa (Opcional)
+                </label>
             </div>
             
-            <div id="swotArea" style="display:none;">
+            <div id="swotArea" style="display:none; margin-top:10px;">
+                <h3 class="small muted">Matriz SWOT</h3>
                 <div class="swot-container">
-                    <div class="swot-card bg-yellow">
-                        <h4>Forças (F)</h4>
-                        <textarea id="swotF" placeholder="Pontos fortes internos..."></textarea>
-                    </div>
-                    <div class="swot-card bg-red">
-                        <h4>Oportunidades (O)</h4>
-                        <textarea id="swotO" placeholder="Oportunidades externas..."></textarea>
-                    </div>
-                    <div class="swot-card bg-green">
-                        <h4>Fraquezas (F)</h4>
-                        <textarea id="swotWr" placeholder="Pontos fracos internos..."></textarea>
-                    </div>
-                    <div class="swot-card bg-blue">
-                        <h4>Ameaças (A)</h4>
-                        <textarea id="swotA" placeholder="Ameaças externas..."></textarea>
+                    <div class="swot-card bg-yellow"><h4>Forças (F)</h4><textarea id="swotF" placeholder="Interno: Pontos fortes..."></textarea></div>
+                    <div class="swot-card bg-red"><h4>Oportunidades (O)</h4><textarea id="swotO" placeholder="Externo: Oportunidades..."></textarea></div>
+                    <div class="swot-card bg-green"><h4>Fraquezas (F)</h4><textarea id="swotWr" placeholder="Interno: Pontos fracos..."></textarea></div>
+                    <div class="swot-card bg-blue"><h4>Ameaças (A)</h4><textarea id="swotA" placeholder="Externo: Ameaças..."></textarea></div>
+                </div>
+            </div>
+
+            <div id="ishikawaArea" style="display:none; margin-top:15px;">
+                <h3 class="small muted">Diagrama de Ishikawa (Causa e Efeito)</h3>
+                <div class="fishbone-wrapper">
+                    <div class="fish-container">
+                        <div class="fish-ribs">
+                            <div class="fish-spine"></div>
+                            <div class="fish-row top">
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Máquina</span>
+                                        <textarea id="ishi_maq" placeholder="Falhas, manutenção..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Método</span>
+                                        <textarea id="ishi_met" placeholder="Procedimentos, regras..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Material</span>
+                                        <textarea id="ishi_mat" placeholder="Matéria-prima, defeitos..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fish-row bottom">
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Mão de Obra</span>
+                                        <textarea id="ishi_mao" placeholder="Treinamento, erros..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Meio Ambiente</span>
+                                        <textarea id="ishi_amb" placeholder="Espaço, clima, layout..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="fish-bone-box">
+                                    <div class="fish-input-card">
+                                        <span class="fish-label">Medida</span>
+                                        <textarea id="ishi_med" placeholder="Calibração, indicadores..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fish-head">
+                            <div class="fish-head-shape">
+                                <label>PROBLEMA / EFEITO</label>
+                                <input type="text" id="ishi_prob" placeholder="Descreva o problema principal">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            
             <div class="divider"></div>
         </div>
 
@@ -409,7 +546,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
   </div>
 </main>
 
-<footer>SelectSupplier — Protótipo funcional v2.1</footer>
+<footer>SelectSupplier — Protótipo funcional v2.2</footer>
 
 <script>
 /* ===================== CONFIG INICIAL ===================== */
@@ -591,7 +728,7 @@ const BASE_FORNECEDORES = [
         A14:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
       }
   }},
-  /* 3. NOVOS FORNECEDORES ADICIONADOS PARA COBRIR EXTRUSÃO (A12) E MOLDES (A15) */
+  /* 3. NOVOS FORNECEDORES PARA A12 e A15 */
   { id:"F23", nome:"ExtrusaPack", areas:["A12"], notas:{
       global:{ I5:8,I7:8,I8:7,I10:7,I13:8,I14:7 },
       porArea:{ A12:{ I1:7,I2:8,I3:8,I4:6,I6:7,I9:6,I11:7,I12:8,I15:7 } }
@@ -754,6 +891,11 @@ function toggleSwot(){
     document.getElementById('swotArea').style.display = chk.checked ? 'block' : 'none';
 }
 
+function toggleIshikawa(){
+    const chk = document.getElementById('checkIshikawa');
+    document.getElementById('ishikawaArea').style.display = chk.checked ? 'block' : 'none';
+}
+
 function addAreaRow(){
   const wrap = document.getElementById('areasWrap');
   const idx = wrap.querySelectorAll('.card').length;
@@ -822,7 +964,7 @@ function calcular(){
   const name = (document.getElementById('projNome').value||"").trim();
   const orc = document.getElementById('projOrc').value;
   const cli = document.getElementById('projCli').value;
-  const dataInicio = document.getElementById('projDataInicio').value; // DATA INICIO
+  const dataInicio = document.getElementById('projDataInicio').value; 
 
   if(!name){ alert("Nome do projeto é obrigatório."); return; }
   if(!orc || !cli){ alert("Selecione Orçamentista e Cliente."); return; }
@@ -871,6 +1013,20 @@ function calcular(){
       };
   }
 
+  // ISHIKAWA
+  let ishikawa = null;
+  if(document.getElementById('checkIshikawa').checked){
+      ishikawa = {
+          maquina: document.getElementById('ishi_maq').value,
+          metodo: document.getElementById('ishi_met').value,
+          material: document.getElementById('ishi_mat').value,
+          maoobra: document.getElementById('ishi_mao').value,
+          meioamb: document.getElementById('ishi_amb').value,
+          medida: document.getElementById('ishi_med').value,
+          problema: document.getElementById('ishi_prob').value
+      };
+  }
+
   // Cálculo
   const areasIds = areasW.map(a=>a.id);
   const considerados = suppliers.filter(f => areasIds.every(a => f.areas.includes(a)));
@@ -902,10 +1058,11 @@ function calcular(){
     cliente: cli,
     status: "A iniciar",
     data: new Date().toISOString(),
-    dataInicio: dataInicio || new Date().toISOString().split('T')[0], // DATA DE INÍCIO
+    dataInicio: dataInicio || new Date().toISOString().split('T')[0],
     areas: areasIds.map(id => AREAS.find(x=>x.id===id)?.nome || id),
     indicesUsados: idxW,
     swot: swot,
+    ishikawa: ishikawa,
     resultados: resultados.map(r=>({
         id: r.f.id, nome:r.f.nome, score: +r.final.toFixed(2), 
         areaScores: r.areaScores
@@ -1106,6 +1263,7 @@ async function generatePDF(ix){
 
     // SWOT
     if(p.swot){
+        if(y > 220) { doc.addPage(); y=20; }
         doc.setFontSize(10); doc.setFont("helvetica", "bold");
         doc.text("Matriz SWOT", 10, y); y+=5;
         
@@ -1135,9 +1293,34 @@ async function generatePDF(ix){
         y += h + 10;
     }
 
+    // ISHIKAWA (Table format in PDF)
+    if(p.ishikawa){
+        if(y > 220) { doc.addPage(); y=20; }
+        doc.setFont("helvetica", "bold"); doc.text("Diagrama de Ishikawa (6M)", 10, y); y+=6;
+        
+        // Problema Principal
+        doc.setFontSize(9);
+        doc.text(`PROBLEMA / EFEITO: ${p.ishikawa.problema || "Não definido"}`, 10, y); y+=6;
+
+        const ishiData = [
+            ["Máquina", p.ishikawa.maquina || "-"],
+            ["Método", p.ishikawa.metodo || "-"],
+            ["Material", p.ishikawa.material || "-"],
+            ["Mão de Obra", p.ishikawa.maoobra || "-"],
+            ["Meio Ambiente", p.ishikawa.meioamb || "-"],
+            ["Medida", p.ishikawa.medida || "-"]
+        ];
+        doc.autoTable({
+            startY: y, head: [['Categoria','Causas']], body: ishiData,
+            theme: 'grid', styles: { fontSize: 8 }
+        });
+        y = doc.lastAutoTable.finalY + 10;
+    }
+
     // Resultados
     if(y > 250) { doc.addPage(); y = 20; }
-    doc.setFont("helvetica", "bold"); doc.text("Ranking de Fornecedores:", 10, y); y+=6;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text("Ranking de Fornecedores:", 10, y); y+=6;
     
     const resData = p.resultados.map((r, i) => [
         `#${i+1}`, r.nome, r.score.toFixed(2)
