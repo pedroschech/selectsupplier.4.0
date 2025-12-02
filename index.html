@@ -78,6 +78,11 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 .stat-val{font-size:2rem; font-weight:bold; color:var(--accent);}
 .stat-label{font-size:0.9rem; color:var(--muted);}
 
+/* Filters in Dashboard */
+.filter-bar{background:var(--card); padding:10px; border-radius:12px; display:flex; gap:10px; align-items:flex-end; border:1px solid var(--border); margin-bottom:15px;}
+.filter-group{flex:1;}
+.filter-group label{display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;}
+
 /* small helpers */
 .small{font-size:.86rem}
 .muted{color:var(--muted)}
@@ -112,50 +117,18 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
 <main id="app" style="display:none">
   <div class="card">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab(event,'dashboard')">Dashboard</button>
-      <button class="tab-btn" data-tab="projeto" onclick="switchTab(event,'projeto')">Novo Projeto</button>
-      <button class="tab-btn" data-tab="projetos" onclick="switchTab(event,'projetos')">Histórico de Projetos</button>
-      <button class="tab-btn" data-tab="orcamentistas" onclick="switchTab(event,'orcamentistas')">Orçamentistas</button>
-      <button class="tab-btn" data-tab="clientes" onclick="switchTab(event,'clientes')">Clientes</button>
+      <button class="tab-btn active" data-tab="projeto" onclick="switchTab(event,'projeto')">Novo Projeto</button>
       <button class="tab-btn" data-tab="indices" onclick="switchTab(event,'indices')">Índices</button>
       <button class="tab-btn" data-tab="fornecedores" onclick="switchTab(event,'fornecedores')">Fornecedores</button>
       <button class="tab-btn" data-tab="cadastro" onclick="switchTab(event,'cadastro')">Manutenção Fornecedores</button>
+      <button class="tab-btn" data-tab="clientes" onclick="switchTab(event,'clientes')">Clientes</button>
+      <button class="tab-btn" data-tab="orcamentistas" onclick="switchTab(event,'orcamentistas')">Orçamentistas</button>
+      <button class="tab-btn" data-tab="projetos" onclick="switchTab(event,'projetos')">Histórico de Projetos</button>
+      <button class="tab-btn" data-tab="dashboard" onclick="switchTab(event,'dashboard')">Dashboard</button>
       <button class="tab-btn" data-tab="sobre" onclick="switchTab(event,'sobre')">Sobre</button>
     </div>
 
-    <section id="dashboard" class="section active">
-        <h2>Visão Geral</h2>
-        <div class="row">
-            <div class="col-4 stat-card">
-                <div class="stat-val" id="db_total">0</div>
-                <div class="stat-label">Total de Projetos</div>
-            </div>
-            <div class="col-4 stat-card">
-                <div class="stat-val" id="db_andamento" style="color:var(--yellow)">0</div>
-                <div class="stat-label">Em Andamento</div>
-            </div>
-            <div class="col-4 stat-card">
-                <div class="stat-val" id="db_concluido" style="color:var(--green)">0</div>
-                <div class="stat-label">Concluídos</div>
-            </div>
-        </div>
-        <div class="row" style="margin-top:20px">
-            <div class="col-6">
-                <div class="card">
-                    <h3>Projetos por Orçamentista</h3>
-                    <canvas id="chartOrc" height="200"></canvas>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card">
-                    <h3>Projetos por Cliente</h3>
-                    <canvas id="chartCli" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="projeto" class="section">
+    <section id="projeto" class="section active">
       <h2>Novo Projeto</h2>
       <div class="row">
         <div class="col-6">
@@ -207,6 +180,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
           <h3>Áreas (pelo menos 1)</h3>
           <div id="areasWrap" class="row"></div>
           <button class="btn" style="margin-top:8px" onclick="addAreaRow()">+ Adicionar área</button>
+          <div style="text-align:right; padding:10px; font-weight:bold;">Total Pesos Áreas: <span id="totalPesoAreaDisplay">10</span>%</div>
         </div>
 
         <div class="col-12">
@@ -216,7 +190,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
             <thead><tr><th>Incluir</th><th>Índice</th><th>Peso (%)</th><th>Descrição</th></tr></thead>
             <tbody id="idxBody"></tbody>
           </table>
-          <div style="text-align:right; padding:10px; font-weight:bold;">Total Pesos: <span id="totalPesoDisplay">0</span>%</div>
+          <div style="text-align:right; padding:10px; font-weight:bold;">Total Pesos Índices: <span id="totalPesoDisplay">0</span>%</div>
         </div>
 
         <div class="col-12">
@@ -235,29 +209,6 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
         <div class="col-12" id="resTable"></div>
         <div class="col-12"><canvas id="resChart" height="120"></canvas></div>
       </div>
-    </section>
-
-    <section id="projetos" class="section">
-      <h2>Projetos Executados</h2>
-      <div id="projHist"></div>
-    </section>
-
-    <section id="orcamentistas" class="section">
-        <h2>Gerenciar Orçamentistas</h2>
-        <div class="row">
-            <div class="col-9"><input id="newOrc" placeholder="Nome do Orçamentista"></div>
-            <div class="col-3"><button class="btn" onclick="addOrc()">Adicionar</button></div>
-            <div class="col-12" id="listOrc"></div>
-        </div>
-    </section>
-
-    <section id="clientes" class="section">
-        <h2>Gerenciar Clientes</h2>
-        <div class="row">
-            <div class="col-9"><input id="newCli" placeholder="Nome do Cliente / Empresa"></div>
-            <div class="col-3"><button class="btn" onclick="addCli()">Adicionar</button></div>
-            <div class="col-12" id="listCli"></div>
-        </div>
     </section>
 
     <section id="indices" class="section">
@@ -317,40 +268,146 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin:20px 0}
         </div>
 
         <div class="col-12">
+            <div class="divider"></div>
           <h3>Notas por área (0–10)</h3>
+          <div class="small muted" style="margin-bottom:10px">Selecione as áreas acima para abrir os campos de preenchimento.</div>
           <div id="c_notasPorArea"></div>
-          <div class="small muted" style="margin-top:6px">Ao marcar/desmarcar áreas atendidas, os blocos de notas por área são atualizados.</div>
         </div>
       </div>
     </section>
 
+    <section id="clientes" class="section">
+        <h2>Gerenciar Clientes</h2>
+        <div class="row">
+            <div class="col-9"><input id="newCli" placeholder="Nome do Cliente / Empresa"></div>
+            <div class="col-3"><button class="btn" onclick="addCli()">Adicionar</button></div>
+            <div class="col-12" id="listCli"></div>
+        </div>
+    </section>
+
+    <section id="orcamentistas" class="section">
+        <h2>Gerenciar Orçamentistas</h2>
+        <div class="row">
+            <div class="col-9"><input id="newOrc" placeholder="Nome do Orçamentista"></div>
+            <div class="col-3"><button class="btn" onclick="addOrc()">Adicionar</button></div>
+            <div class="col-12" id="listOrc"></div>
+        </div>
+    </section>
+
+    <section id="projetos" class="section">
+      <h2>Projetos Executados</h2>
+      <div id="projHist"></div>
+    </section>
+
+    <section id="dashboard" class="section">
+        <h2>Visão Geral</h2>
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="dbF_status" onchange="renderDashboard()">
+                    <option value="">Todos</option>
+                    <option value="A iniciar">A iniciar</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Concluído">Concluído</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Orçamentista</label>
+                <select id="dbF_orc" onchange="renderDashboard()"></select>
+            </div>
+            <div class="filter-group">
+                <label>Cliente</label>
+                <select id="dbF_cli" onchange="renderDashboard()"></select>
+            </div>
+            <div class="filter-group" style="flex:0">
+                <button class="btn secondary" onclick="clearDbFilters()">Limpar</button>
+            </div>
+         </div>
+
+        <div class="row">
+            <div class="col-4 stat-card">
+                <div class="stat-val" id="db_total">0</div>
+                <div class="stat-label">Projetos Filtrados</div>
+            </div>
+            <div class="col-4 stat-card">
+                <div class="stat-val" id="db_andamento" style="color:var(--yellow)">0</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
+            <div class="col-4 stat-card">
+                <div class="stat-val" id="db_concluido" style="color:var(--green)">0</div>
+                <div class="stat-label">Concluídos</div>
+            </div>
+        </div>
+        <div class="row" style="margin-top:20px">
+            <div class="col-6">
+                <div class="card">
+                    <h3>Projetos por Orçamentista (Filtrados)</h3>
+                    <canvas id="chartOrc" height="200"></canvas>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <h3>Projetos por Cliente (Filtrados)</h3>
+                    <canvas id="chartCli" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="sobre" class="section">
-      <h2>Sobre</h2>
-      <p class="small muted">Protótipo acadêmico de apoio à decisão multicritério (MCDA) para seleção de fornecedores.</p>
+      <h2>Sobre o Cálculo</h2>
+      <p class="muted">Este sistema utiliza o método de <strong>Média Ponderada (Weighted Sum Model)</strong> para classificar fornecedores.</p>
+      
+      <div class="card" style="background:var(--card2)">
+        <h3>1. Estrutura de Pesos</h3>
+        <ul>
+            <li><strong>Pesos dos Índices:</strong> O usuário define pesos para critérios (ex: Qualidade = 30%, Preço = 20%...). A soma deve ser obrigatoriamente 100%.</li>
+            <li><strong>Pesos das Áreas:</strong> O usuário define a importância de cada processo produtivo no projeto (ex: Usinagem = 80%, Pintura = 20%). A soma também deve ser obrigatoriamente 100%.</li>
+        </ul>
+
+        <h3>2. Cálculo do Score por Área</h3>
+        <p>Para cada área $j$ e fornecedor $F$, calcula-se o score parcial ($S_{j}$):</p>
+        <p style="font-family:monospace; background:#000; padding:10px; border-radius:8px;">
+            S_j = Σ (Nota_i × Peso_i)
+        </p>
+        <p class="small">Onde $Nota_i$ é a nota do índice $i$ naquela área (ou nota global se for um índice global) e $Peso_i$ é o peso decimal do índice.</p>
+
+        <h3>3. Cálculo do Score Final</h3>
+        <p>O score final do fornecedor é a média ponderada dos scores das áreas:</p>
+        <p style="font-family:monospace; background:#000; padding:10px; border-radius:8px;">
+            ScoreFinal = Σ (S_j × PesoArea_j)
+        </p>
+        
+        <h3>4. Critério de Corte</h3>
+        <p>Apenas fornecedores que possuem capacidade produtiva cadastrada em <strong>TODAS</strong> as áreas solicitadas pelo projeto são incluídos no ranking.</p>
+      </div>
+      
+      <p class="small muted">Desenvolvido como protótipo acadêmico para AGEPE II - PUCRS.</p>
     </section>
   </div>
 </main>
 
-<footer>SelectSupplier — Protótipo funcional</footer>
+<footer>SelectSupplier — Protótipo funcional v2</footer>
 
 <script>
 /* ===================== CONFIG INICIAL ===================== */
+/* Descrições encorpadas e detalhadas */
 const INITIAL_INDICES = [
-  { id:"I1",  nome:"Qualidade", scope:"area", desc:"Conformidade com especificações." },
-  { id:"I2",  nome:"Tempo de Entrega", scope:"area", desc:"Cumprimento de prazos." },
-  { id:"I3",  nome:"Custo", scope:"area", desc:"Competitividade de preço." },
-  { id:"I4",  nome:"Flexibilidade", scope:"area", desc:"Reação a mudanças." },
-  { id:"I5",  nome:"Acuracidade Doc.", scope:"global", desc:"Erros em notas fiscais." },
-  { id:"I6",  nome:"Reclamações Téc.", scope:"area", desc:"Histórico de problemas." },
-  { id:"I7",  nome:"Normas Amb.", scope:"global", desc:"Certificações ESG." },
-  { id:"I8",  nome:"Comunicação", scope:"global", desc:"Agilidade de resposta." },
-  { id:"I9",  nome:"Inovação", scope:"area", desc:"Proposição de melhorias." },
-  { id:"I10", nome:"Confiabilidade Fin.", scope:"global", desc:"Estabilidade financeira." },
-  { id:"I11", nome:"Capacidade Téc.", scope:"area", desc:"Adequação tecnológica." },
-  { id:"I12", nome:"Logística", scope:"area", desc:"Rastreabilidade." },
-  { id:"I13", nome:"Compliance", scope:"global", desc:"Legal e Trabalhista." },
-  { id:"I14", nome:"Pós-venda", scope:"global", desc:"Suporte técnico." },
-  { id:"I15", nome:"Satisfação Interna", scope:"area", desc:"Percepção usuários." }
+  { id:"I1",  nome:"Qualidade", scope:"area", desc:"Nível de conformidade técnica, acabamento superficial e aderência às tolerâncias de desenho." },
+  { id:"I2",  nome:"Tempo de Entrega", scope:"area", desc:"Histórico de cumprimento de prazos (OTD), lead time e previsibilidade logística." },
+  { id:"I3",  nome:"Custo", scope:"area", desc:"Competitividade da proposta comercial em relação à média de mercado e breakdown de custos." },
+  { id:"I4",  nome:"Flexibilidade", scope:"area", desc:"Capacidade de adaptação a alterações de engenharia, mix de produtos ou urgências de volume." },
+  { id:"I5",  nome:"Acuracidade Doc.", scope:"global", desc:"Precisão na emissão de notas fiscais, certificados de matéria-prima e laudos de qualidade." },
+  { id:"I6",  nome:"Reclamações Téc.", scope:"area", desc:"Índice histórico de não-conformidades (RNCs) e rejeições em recebimento." },
+  { id:"I7",  nome:"Normas Amb.", scope:"global", desc:"Adesão a práticas ESG, ISO 14001 e gestão correta de resíduos industriais." },
+  { id:"I8",  nome:"Comunicação", scope:"global", desc:"Facilidade de contato, transparência nas informações e tempo médio de resposta." },
+  { id:"I9",  nome:"Inovação", scope:"area", desc:"Proatividade na sugestão de melhorias de processo, redução de custo ou novos materiais." },
+  { id:"I10", nome:"Confiabilidade Fin.", scope:"global", desc:"Saúde financeira da empresa, risco de falência ou interrupção por falta de capital de giro." },
+  { id:"I11", nome:"Capacidade Téc.", scope:"area", desc:"Parque fabril atualizado, tecnologia de máquinas e expertise técnica da equipe." },
+  { id:"I12", nome:"Logística", scope:"area", desc:"Qualidade da embalagem, rastreabilidade do transporte e cumprimento de janelas de entrega." },
+  { id:"I13", nome:"Compliance", scope:"global", desc:"Regularidade fiscal, trabalhista e ética corporativa (Compliance e Governança)." },
+  { id:"I14", nome:"Pós-venda", scope:"global", desc:"Agilidade na resolução de problemas, garantias e suporte técnico continuado." },
+  { id:"I15", nome:"Satisfação Interna", scope:"area", desc:"Percepção qualitativa dos stakeholders internos (Engenharia, Qualidade, PCP)." }
 ];
 
 const INITIAL_ORCS = ["Bruno Ullmann", "Lucas Sitieni", "Pedro Schech", "Rafael Hirt"];
@@ -370,22 +427,157 @@ const AREAS = [
   { id:"A13", nome:"Rotomoldagem" }, { id:"A14", nome:"Montagem e Acabamento" }, { id:"A15", nome:"Fabricação de Moldes" }
 ];
 
-/* Base de fornecedores (mantida do original, resumida aqui para brevidade, mas o sistema suporta o original completo) */
+/* Base de fornecedores COMPLETA conforme pedido */
 const BASE_FORNECEDORES = [
-  { id:"F1", nome:"MecanizaPro", areas:["A1","A2","A3"], notas:{ global:{ I5:8,I7:7,I8:8,I10:7,I13:7,I14:7 }, porArea:{ A1:{ I1:8,I2:6,I3:7,I4:6,I6:8,I9:7,I11:8,I12:7,I15:8 }, A2:{ I1:6,I2:6,I3:7,I4:5,I6:7,I9:5,I11:6,I12:6,I15:6 }, A3:{ I1:5,I2:4,I3:5,I4:5,I6:6,I9:5,I11:5,I12:5,I15:5 } } }},
-  { id:"F2", nome:"Usinax", areas:["A1","A2","A5","A10"], notas:{ global:{ I5:7,I7:8,I8:7,I10:6,I13:7,I14:7 }, porArea:{ A1:{ I1:7,I2:8,I3:6,I4:7,I6:8,I9:6,I11:8,I12:8,I15:7 }, A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 }, A5:{ I1:8,I2:7,I3:8,I4:6,I6:7,I9:8,I11:7,I12:7,I15:7 }, A10:{ I1:7,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 } } }},
-  { id:"F3", nome:"SmartAutomate", areas:["A6"], notas:{ global:{ I5:9,I7:9,I8:9,I10:9,I13:9,I14:9 }, porArea:{ A6:{ I1:9,I2:8,I3:8,I4:7,I6:9,I9:9,I11:8,I12:8,I15:9 } } }}
-]; 
-// OBS: Em produção real, manteria o array BASE_FORNECEDORES gigante do seu código original aqui. 
-// Para este exemplo, vou assumir que ele está sendo carregado corretamente se você colar o original acima, 
-// ou usar esse pequeno subset para teste.
+  { id:"F1", nome:"MecanizaPro", areas:["A1","A2","A3"], notas:{
+      global:{ I5:8,I7:7,I8:8,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:6,I3:7,I4:6,I6:8,I9:7,I11:8,I12:7,I15:8 },
+        A2:{ I1:6,I2:6,I3:7,I4:5,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A3:{ I1:5,I2:4,I3:5,I4:5,I6:6,I9:5,I11:5,I12:5,I15:5 }
+      }
+  }},
+  { id:"F2", nome:"Usinax", areas:["A1","A2","A5","A10"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:6,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:8,I3:6,I4:7,I6:8,I9:6,I11:8,I12:8,I15:7 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A5:{ I1:8,I2:7,I3:8,I4:6,I6:7,I9:8,I11:7,I12:7,I15:7 },
+        A10:{ I1:7,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F3", nome:"SmartAutomate", areas:["A6"], notas:{
+      global:{ I5:9,I7:9,I8:9,I10:9,I13:9,I14:9 },
+      porArea:{ A6:{ I1:9,I2:8,I3:8,I4:7,I6:9,I9:9,I11:8,I12:8,I15:9 } }
+  }},
+  { id:"F4", nome:"MetalPrime", areas:["A8","A7","A10"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A8:{ I1:6,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A7:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A10:{ I1:8,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F5", nome:"GreenPlast", areas:["A4","A11"], notas:{
+      global:{ I5:8,I7:9,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A4:{ I1:8,I2:7,I3:7,I4:7,I6:8,I9:7,I11:7,I12:7,I15:8 },
+        A11:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }},
+  { id:"F6", nome:"LaserShape", areas:["A10","A1"], notas:{
+      global:{ I5:8,I7:8,I8:8,I10:7,I13:7,I14:7 },
+      porArea:{
+        A10:{ I1:8,I2:8,I3:7,I4:7,I6:8,I9:7,I11:8,I12:8,I15:7 },
+        A1:{  I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }},
+  { id:"F7", nome:"MetriScan", areas:["A9"], notas:{
+      global:{ I5:9,I7:9,I8:8,I10:8,I13:9,I14:8 },
+      porArea:{ A9:{ I1:9,I2:8,I3:7,I4:6,I6:8,I9:8,I11:9,I12:8,I15:8 } }
+  }},
+  { id:"F8", nome:"TecnoWeld", areas:["A2"], notas:{
+      global:{ I5:7,I7:7,I8:6,I10:7,I13:7,I14:7 },
+      porArea:{ A2:{ I1:8,I2:6,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 } }
+  }},
+  { id:"F9", nome:"AutoPaint", areas:["A11"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{ A11:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F10", nome:"ProtoPrint3D", areas:["A5"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{ A5:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:8,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F11", nome:"AeroMetals", areas:["A1","A2","A3"], notas:{
+      global:{ I5:8,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A1:{ I1:9,I2:7,I3:6,I4:8,I6:8,I9:8,I11:8,I12:8,I15:9 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 },
+        A3:{ I1:6,I2:5,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F12", nome:"TurboMec", areas:["A1","A2"], notas:{
+      global:{ I5:7,I7:7,I8:6,I10:6,I13:7,I14:6 },
+      porArea:{
+        A1:{ I1:8,I2:6,I3:6,I4:8,I6:7,I9:7,I11:7,I12:7,I15:8 },
+        A2:{ I1:7,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F13", nome:"ForgeMix", areas:["A1","A2","A7"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:7,I3:7,I4:7,I6:7,I9:6,I11:7,I12:7,I15:8 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 },
+        A7:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F14", nome:"Proweld Machining", areas:["A1","A2"], notas:{
+      global:{ I5:8,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:8,I2:8,I3:7,I4:7,I6:8,I9:7,I11:8,I12:8,I15:8 },
+        A2:{ I1:7,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 }
+      }
+  }},
+  { id:"F15", nome:"SteelCraft", areas:["A1","A2","A8"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:7,I3:6,I4:7,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A2:{ I1:8,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:7 },
+        A8:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F16", nome:"Weld&Mill", areas:["A1","A2"], notas:{
+      global:{ I5:8,I7:8,I8:8,I10:7,I13:8,I14:8 },
+      porArea:{
+        A1:{ I1:9,I2:8,I3:7,I4:8,I6:8,I9:7,I11:8,I12:8,I15:9 },
+        A2:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:6,I12:6,I15:7 }
+      }
+  }},
+  { id:"F17", nome:"MaxForge", areas:["A3","A7"], notas:{
+      global:{ I5:7,I7:6,I8:6,I10:6,I13:7,I14:6 },
+      porArea:{
+        A3:{ I1:7,I2:5,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 },
+        A7:{ I1:7,I2:6,I3:6,I4:6,I6:6,I9:5,I11:6,I12:6,I15:6 }
+      }
+  }},
+  { id:"F18", nome:"PlastiForm", areas:["A4"], notas:{
+      global:{ I5:8,I7:8,I8:7,I10:7,I13:8,I14:7 },
+      porArea:{ A4:{ I1:7,I2:7,I3:7,I4:7,I6:7,I9:7,I11:7,I12:7,I15:7 } }
+  }},
+  { id:"F19", nome:"Rotomax", areas:["A13"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{ A13:{ I1:7,I2:6,I3:7,I4:6,I6:7,I9:6,I11:6,I12:6,I15:6 } }
+  }},
+  { id:"F20", nome:"PaintFlex", areas:["A11","A10"], notas:{
+      global:{ I5:7,I7:8,I8:7,I10:8,I13:8,I14:8 },
+      porArea:{
+        A11:{ I1:8,I2:7,I3:6,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A10:{ I1:7,I2:8,I3:7,I4:6,I6:7,I9:6,I11:8,I12:8,I15:7 }
+      }
+  }},
+  { id:"F21", nome:"MeasureTech", areas:["A9","A6"], notas:{
+      global:{ I5:9,I7:9,I8:8,I10:8,I13:9,I14:8 },
+      porArea:{
+        A9:{ I1:9,I2:8,I3:7,I4:6,I6:8,I9:8,I11:9,I12:8,I15:8 },
+        A6:{ I1:8,I2:8,I3:8,I4:7,I6:8,I9:8,I11:8,I12:8,I15:9 }
+      }
+  }},
+  { id:"F22", nome:"InduParts", areas:["A1","A2","A14"], notas:{
+      global:{ I5:7,I7:7,I8:7,I10:7,I13:7,I14:7 },
+      porArea:{
+        A1:{ I1:7,I2:7,I3:7,I4:7,I6:7,I9:6,I11:7,I12:7,I15:7 },
+        A2:{ I1:7,I2:6,I3:6,I4:6,I6:7,I9:5,I11:6,I12:6,I15:6 },
+        A14:{ I1:7,I2:7,I3:7,I4:6,I6:7,I9:6,I11:7,I12:7,I15:7 }
+      }
+  }}
+];
 
 /* ===================== ESTADO / STORAGE ===================== */
-const SK_SUP = "ss_v4_suppliers";
-const SK_PROJ = "ss_v4_projects";
-const SK_ORC = "ss_v4_orcamentistas";
-const SK_CLI = "ss_v4_clientes";
-const SK_IND = "ss_v4_indices";
+const SK_SUP = "ss_v5_suppliers";
+const SK_PROJ = "ss_v5_projects";
+const SK_ORC = "ss_v5_orcamentistas";
+const SK_CLI = "ss_v5_clientes";
+const SK_IND = "ss_v5_indices";
 
 let suppliers = [];
 let projects = [];
@@ -397,7 +589,7 @@ let dashboardCharts = { orc: null, cli: null };
 
 function loadState(){
   try{ suppliers = JSON.parse(localStorage.getItem(SK_SUP)||"null"); }catch(_){ suppliers=null; }
-  if(!Array.isArray(suppliers)) suppliers = structuredClone(BASE_FORNECEDORES);
+  if(!Array.isArray(suppliers) || suppliers.length===0) suppliers = structuredClone(BASE_FORNECEDORES);
 
   try{ projects = JSON.parse(localStorage.getItem(SK_PROJ)||"null"); }catch(_){ projects=null; }
   if(!Array.isArray(projects)) projects = [];
@@ -440,7 +632,7 @@ function switchTab(ev,id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   
-  if(id==="dashboard") renderDashboard();
+  if(id==="dashboard"){ renderDbFilters(); renderDashboard(); }
   if(id==="fornecedores") renderFornecedores();
   if(id==="cadastro") renderCadastro();
   if(id==="projetos") renderProjetos();
@@ -545,7 +737,7 @@ function addAreaRow(){
         </div>
         <div class="col-4">
           <label>Peso da área (%)</label>
-          <input class="area-weight" type="number" min="0" max="100" value="10">
+          <input class="area-weight" type="number" min="0" max="100" value="10" oninput="updateTotalAreaWeight()">
         </div>
         <div class="col-2" style="display:flex;align-items:flex-end;">
           <button class="btn secondary remove-area" ${idx===0?'disabled':''}>Remover</button>
@@ -553,7 +745,18 @@ function addAreaRow(){
       </div>
     </div>`;
   wrap.appendChild(row);
-  row.querySelector('.remove-area').onclick = () => { if(idx>0) row.remove(); };
+  row.querySelector('.remove-area').onclick = () => { if(idx>0) row.remove(); updateTotalAreaWeight(); };
+  updateTotalAreaWeight();
+}
+
+function updateTotalAreaWeight(){
+    let sum = 0;
+    document.querySelectorAll('.area-weight').forEach(i=>{
+        sum += Number(i.value)||0;
+    });
+    const el = document.getElementById('totalPesoAreaDisplay');
+    el.textContent = sum;
+    el.style.color = sum===100 ? 'var(--green)' : 'var(--red)';
 }
 
 function renderIndicesTableForProject(){
@@ -591,7 +794,7 @@ function calcular(){
   if(!name){ alert("Nome do projeto é obrigatório."); return; }
   if(!orc || !cli){ alert("Selecione Orçamentista e Cliente."); return; }
 
-  // Validação Soma 100
+  // 1. Validação Soma 100 ÍNDICES
   let sumW = 0;
   const idxRows = indicesList.map(ind=>{
     const chk = document.querySelector(`.idx-inc[data-id='${ind.id}']`);
@@ -602,24 +805,26 @@ function calcular(){
   }).filter(r=>r);
 
   if(sumW !== 100){
-      alert(`A soma dos pesos dos índices deve ser 100. Atual: ${sumW}`);
+      alert(`ERRO: A soma dos pesos dos ÍNDICES deve ser exatamente 100%. Soma atual: ${sumW}%`);
       return;
   }
 
-  // Áreas
+  // 2. Validação Soma 100 ÁREAS
   const areaRows = [...document.querySelectorAll('#areasWrap .card')].map(card=>{
     const id = card.querySelector('.area-select').value;
-    const peso = clamp(card.querySelector('.area-weight').value,0,100);
+    const peso = Number(card.querySelector('.area-weight').value)||0;
     return { id, peso };
   });
   if(!areaRows.length){ alert("Adicione ao menos 1 área."); return; }
   
-  // Normalizar pesos das Áreas (o requisito só pediu trava de 100% nos índices, mas áreas vamos manter normalização auto ou não? 
-  // O requisito diz "Limitar soma dos pesos (Índices)". Vou manter normalização nas áreas para não travar o fluxo, mas índices é rígido).
-  const sArea = areaRows.reduce((a,b)=>a+b.peso,0);
-  const areasW = areaRows.map(a=>({...a, w: sArea>0?a.peso/sArea:0}));
-
-  // Pesos índices (já validado que soma 100, então w = peso/100)
+  const sumArea = areaRows.reduce((a,b)=>a+b.peso,0);
+  if(sumArea !== 100){
+      alert(`ERRO: A soma dos pesos das ÁREAS deve ser exatamente 100%. Soma atual: ${sumArea}%`);
+      return;
+  }
+  
+  // Normalizar pesos para decimal (dividir por 100)
+  const areasW = areaRows.map(a=>({...a, w: a.peso/100}));
   const idxW = idxRows.map(i=>({...i, w: i.peso/100}));
 
   // SWOT
@@ -711,18 +916,50 @@ function renderGrafico(lista){
 }
 
 /* ===================== DASHBOARD ===================== */
+function renderDbFilters(){
+    const fOrc = document.getElementById('dbF_orc');
+    const fCli = document.getElementById('dbF_cli');
+    
+    // Manter seleção se já existe
+    const selO = fOrc.value; 
+    const selC = fCli.value;
+
+    fOrc.innerHTML = `<option value="">Todos</option>` + orcamentistas.map(o=>`<option value="${o}">${o}</option>`).join('');
+    fCli.innerHTML = `<option value="">Todos</option>` + clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
+    
+    fOrc.value = selO;
+    fCli.value = selC;
+}
+
+function clearDbFilters(){
+    document.getElementById('dbF_status').value = "";
+    document.getElementById('dbF_orc').value = "";
+    document.getElementById('dbF_cli').value = "";
+    renderDashboard();
+}
+
 function renderDashboard(){
+    // Filtros
+    const fs = document.getElementById('dbF_status').value;
+    const fo = document.getElementById('dbF_orc').value;
+    const fc = document.getElementById('dbF_cli').value;
+
+    let filtered = projects;
+    if(fs) filtered = filtered.filter(p=>p.status === fs);
+    if(fo) filtered = filtered.filter(p=>p.orcamentista === fo);
+    if(fc) filtered = filtered.filter(p=>p.cliente === fc);
+
     // Stats
-    const total = projects.length;
-    const emAnd = projects.filter(p=>p.status==="Em andamento").length;
-    const conc = projects.filter(p=>p.status==="Concluído").length;
+    const total = filtered.length;
+    const emAnd = filtered.filter(p=>p.status==="Em andamento").length;
+    const conc = filtered.filter(p=>p.status==="Concluído").length;
     document.getElementById('db_total').innerText = total;
     document.getElementById('db_andamento').innerText = emAnd;
     document.getElementById('db_concluido').innerText = conc;
 
     // Charts
-    const byOrc = {}; projects.forEach(p=>{ byOrc[p.orcamentista] = (byOrc[p.orcamentista]||0)+1; });
-    const byCli = {}; projects.forEach(p=>{ byCli[p.cliente] = (byCli[p.cliente]||0)+1; });
+    const byOrc = {}; filtered.forEach(p=>{ byOrc[p.orcamentista] = (byOrc[p.orcamentista]||0)+1; });
+    const byCli = {}; filtered.forEach(p=>{ byCli[p.cliente] = (byCli[p.cliente]||0)+1; });
 
     renderPie(document.getElementById('chartOrc'), Object.keys(byOrc), Object.values(byOrc), 'orc');
     renderPie(document.getElementById('chartCli'), Object.keys(byCli), Object.values(byCli), 'cli');
@@ -782,7 +1019,7 @@ function renderProjetos(){
 function updateStatus(ix, val){
     projects[ix].status = val;
     saveData();
-    // não precisa re-renderizar tudo
+    // não precisa re-renderizar
 }
 function addComment(ix){
     const inp = document.getElementById(`comment_${ix}`);
@@ -833,26 +1070,25 @@ async function generatePDF(ix){
         doc.setFontSize(10); doc.setFont("helvetica", "bold");
         doc.text("Matriz SWOT", 10, y); y+=5;
         
-        // Simples representação de tabela colorida
         const h = 25; const w = 90;
-        // F (Amarelo)
+        // F
         doc.setFillColor(255, 249, 196); doc.rect(10, y, w, h, 'F');
         doc.text("FORÇAS", 12, y+5); doc.setFont("helvetica", "normal"); 
         doc.text(doc.splitTextToSize(p.swot.f||"-", 85), 12, y+10);
         
-        // O (Vermelho)
+        // O
         doc.setFillColor(255, 205, 210); doc.rect(10+w, y, w, h, 'F');
         doc.setFont("helvetica", "bold"); doc.text("OPORTUNIDADES", 12+w, y+5); doc.setFont("helvetica", "normal");
         doc.text(doc.splitTextToSize(p.swot.o||"-", 85), 12+w, y+10);
         
         y += h; 
         
-        // Fr (Verde) - Req diz verde pastel pra Fraquezas, ok
+        // Fr
         doc.setFillColor(200, 230, 201); doc.rect(10, y, w, h, 'F');
         doc.setFont("helvetica", "bold"); doc.text("FRAQUEZAS", 12, y+5); doc.setFont("helvetica", "normal");
         doc.text(doc.splitTextToSize(p.swot.fr||"-", 85), 12, y+10);
         
-        // A (Azul)
+        // A
         doc.setFillColor(187, 222, 251); doc.rect(10+w, y, w, h, 'F');
         doc.setFont("helvetica", "bold"); doc.text("AMEAÇAS", 12+w, y+5); doc.setFont("helvetica", "normal");
         doc.text(doc.splitTextToSize(p.swot.a||"-", 85), 12+w, y+10);
@@ -931,17 +1167,31 @@ function renderCadastro(){
   document.getElementById('c_notasGlobais').innerHTML = indicesList.filter(i=>i.scope==="global").map(i=>`<label class="small">${i.id} — ${i.nome} <input type="number" min="0" max="10" step="0.1" data-id="${i.id}"></label>`).join("");
   renderNotasPorArea();
 }
+
 function renderNotasPorArea(){
   const marcadas = [...document.querySelectorAll('#c_areas input:checked')].map(i=>i.value);
   const idxArea = indicesList.filter(i=>i.scope==="area");
   const wrap = document.getElementById('c_notasPorArea');
-  if(!marcadas.length){ wrap.innerHTML = `<p class="muted">Marque ao menos uma área.</p>`; return; }
+  
+  if(!marcadas.length){ wrap.innerHTML = `<p class="muted">Selecione áreas acima.</p>`; return; }
+  
+  // Layout similar a global (Grid)
   wrap.innerHTML = marcadas.map(a=>{
     const nome = AREAS.find(x=>x.id===a)?.nome||a;
-    const ins = idxArea.map(i=>`<label class="small">${i.id} — ${i.nome} <input type="number" min="0" max="10" step="0.1" data-id="${i.id}"></label>`).join("");
-    return `<div class="card" style="background:var(--card2)"><div class="badge">${nome}</div><div>${ins}</div></div>`;
+    const ins = idxArea.map(i=>`
+        <div class="col-3" style="margin-bottom:8px">
+            <label class="small">${i.id} — ${i.nome}</label>
+            <input type="number" min="0" max="10" step="0.1" data-id="${i.id}">
+        </div>
+    `).join("");
+    
+    return `<div class="card" style="background:var(--card2)">
+        <div class="badge" style="margin-bottom:10px; font-weight:bold;">${nome}</div>
+        <div class="row">${ins}</div>
+    </div>`;
   }).join("");
 }
+
 function limparCadastro(){ editingId = null; document.getElementById('c_id').value=""; document.getElementById('c_nome').value=""; renderCadastro(); }
 
 function salvarFornecedor(){
@@ -952,15 +1202,27 @@ function salvarFornecedor(){
   if(!areas.length){ alert("Selecione áreas."); return; }
   
   const globais = {}; document.querySelectorAll('#c_notasGlobais input').forEach(inp=>{ const v=inp.value.trim(); if(v!=="") globais[inp.dataset.id]=clamp(v,0,10); });
-  const porArea = {}; document.querySelectorAll('#c_notasPorArea .card').forEach(card=>{
-    const anome = card.querySelector('.badge').textContent; const aid = AREAS.find(a=>a.nome===anome)?.id;
-    if(aid){ porArea[aid]={}; card.querySelectorAll('input').forEach(i=>{ const v=i.value.trim(); if(v!=="") porArea[aid][i.dataset.id]=clamp(v,0,10); }); }
+  const porArea = {}; 
+  
+  // Agora buscamos por badge
+  document.querySelectorAll('#c_notasPorArea .card').forEach(card=>{
+    const anome = card.querySelector('.badge').textContent; 
+    const aid = AREAS.find(a=>a.nome===anome)?.id;
+    if(aid){ 
+        porArea[aid]={}; 
+        card.querySelectorAll('input').forEach(i=>{ 
+            const v=i.value.trim(); 
+            if(v!=="") porArea[aid][i.dataset.id]=clamp(v,0,10); 
+        }); 
+    }
   });
+  
   const obj = { id, nome, areas, notas:{ global:globais, porArea } };
   if(editingId){ const ix=suppliers.findIndex(f=>f.id===editingId); if(ix>=0) suppliers[ix]=obj; editingId=null; }
   else{ if(suppliers.some(f=>f.id===id)){ alert("ID duplicado"); return; } suppliers.push(obj); }
   saveData(); alert("Salvo"); renderFornecedores();
 }
+
 function editarFornecedor(id){
   const f = suppliers.find(x=>x.id===id); if(!f) return;
   editingId=id; document.querySelector(".tab-btn[data-tab='cadastro']").click();
@@ -983,6 +1245,7 @@ function initUI(){
   renderIndicesTableForProject();
   addAreaRow();
   updateProjectSelects();
+  renderDbFilters();
   renderDashboard();
 }
 
